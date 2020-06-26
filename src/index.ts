@@ -3,6 +3,206 @@ import Riichi from 'riichi';
 
 import auth from '../auth.json';
 
+function assert(input: boolean, message?: string): asserts input {
+    if (!input) throw new Error(message);
+}
+
+enum Winds {
+    East = 1,
+    South = 2,
+    West = 3,
+    North = 4,
+}
+
+abstract class Thing {
+    abstract format(): string;
+}
+
+abstract class Tile extends Thing {
+    abstract format(): string;
+}
+
+abstract class SimpleTile extends Tile {
+    value: string;
+
+    constructor(value: string) {
+        super();
+
+        assert(value.length > 0);
+
+        this.value = value;
+    }
+}
+
+class SouTile extends SimpleTile {
+    format = () => `${this.value}s`;
+}
+
+class PinTile extends SimpleTile {
+    format = () => `${this.value}p`;
+}
+
+class ManTile extends SimpleTile {
+    format = () => `${this.value}m`;
+}
+
+abstract class HonorTile extends Tile {
+    index: number;
+    count: number;
+
+    constructor(index: number, count: number) {
+        super();
+
+        assert(!isNaN(count) || !isFinite(count) && count > 0);
+
+        this.index = index;
+        this.count = count;
+    }
+
+    format = () => `${`${this.index}`.repeat(this.count)}z`;
+}
+
+abstract class WindTile extends HonorTile {}
+
+class EastWindTile extends WindTile {
+    constructor(count: number) {
+        super(1, count);
+    }
+}
+
+class SouthWindTile extends WindTile {
+    constructor(count: number) {
+        super(2, count);
+    }
+}
+
+class WestWindTile extends WindTile {
+    constructor(count: number) {
+        super(3, count);
+    }
+}
+
+class NorthWindTile extends WindTile {
+    constructor(count: number) {
+        super(4, count);
+    }
+}
+
+abstract class DragonTile extends HonorTile {}
+
+class GreenDragonTile extends DragonTile {
+    constructor(count: number) {
+        super(5, count);
+    }
+}
+
+class RedDragonTile extends DragonTile {
+    constructor(count: number) {
+        super(6, count);
+    }
+}
+
+class WhiteDragonTile extends DragonTile {
+    constructor(count: number) {
+        super(7, count);
+    }
+}
+
+
+class Wind extends Thing {
+    wind: Winds;
+
+    constructor(wind: Winds) {
+        super();
+        this.wind = wind;
+    }
+
+    format = () => `${this.wind.valueOf()}`;
+}
+
+class Stolen extends Thing {
+    tile: Tile;
+
+    constructor(tile: Tile) {
+        super();
+        this.tile = tile;
+    }
+
+    format = () => `${this.tile.format()}`;
+}
+
+class Round extends Thing {
+    wind: Winds;
+
+    constructor(wind: Winds) {
+        super();
+        this.wind = wind;
+    }
+
+    format = () => `${this.wind.valueOf()}`;
+}
+
+class Ron extends Thing {
+    tile: Tile;
+
+    constructor(tile: Tile) {
+        super();
+        this.tile = tile;
+    }
+
+    format = () => this.tile.format();
+}
+
+abstract class Flag extends Thing {}
+
+class RiichiFlag extends Flag {
+    format = () => 'r';
+}
+
+class IppatsuFlag extends Flag {
+    format = () => 'i';
+}
+
+class RinshanFlag extends Flag {
+    format = () => 'k';
+}
+
+class HaiteiFlag extends Flag {
+    format = () => 'h';
+}
+
+
+const windLookup: {[wind: string]: Winds} = {
+    'east': Winds.East,
+    'south': Winds.South,
+    'west': Winds.West,
+    'north': Winds.North,
+};
+const tileLookup: { [tag: string]: (values: string[]) => Tile } = {
+    'sou': (values) => new SouTile(values[0]),
+    'man': (values) => new ManTile(values[0]),
+    'pin': (values) => new PinTile(values[0]),
+    'east': (values) => new EastWindTile(parseInt(values[0])),
+    'south': (values) => new SouthWindTile(parseInt(values[0])),
+    'west': (values) => new WestWindTile(parseInt(values[0])),
+    'north': (values) => new NorthWindTile(parseInt(values[0])),
+    'green': (values) => new GreenDragonTile(parseInt(values[0])),
+    'red': (values) => new RedDragonTile(parseInt(values[0])),
+    'white': (values) => new WhiteDragonTile(parseInt(values[0])),
+};
+const lookup: { [tag: string]: (values: string[]) => Thing } = {
+    'stolen': (values) => new Stolen(tileLookup[values[0]]?.(values.slice(1))),
+    'ron': (values) => new Ron(tileLookup[values[0]]?.(values.slice(1))),
+    'riichi': (_values) => new RiichiFlag(),
+    'ippatsu': (_values) => new IppatsuFlag(),
+    'chankan': (_values) => new RinshanFlag(),
+    'rinshan': (_values) => new RinshanFlag(),
+    'haitei': (_values) => new HaiteiFlag(),
+    'houtei': (_values) => new HaiteiFlag(),
+    'wind': (values) => new Wind(windLookup[values[0]]),
+    'round': (values) => new Round(windLookup[values[0]]),
+};
+
 class RiichiBot {
     bot: Discord.Client;
 
@@ -41,44 +241,113 @@ class RiichiBot {
     }
 
     handle = (message: Discord.Message, args: string[]) => {
-        const riichi = new Riichi(args[0]);
-        const result = riichi.calc();
-        console.log(result);
-        if (result.error) {
+        let arg: string;
+        try {
+            if (args[0].includes(':') || args.length > 1) {
+                const tiles = new Array<Thing>();
+                for (const arg of args) {
+                    const [tag, ...values] = arg.split(':');
+                    const tile = (lookup[tag] ?? tileLookup[tag])?.(values);
+                    if (tile !== undefined) {
+                        tiles.push(tile);
+                    }
+                }
+
+                const handTiles: string[] = [];
+                const stolenTiles: string[] = [];
+                let ron: Ron | undefined;
+                let flags = new Array<string>();
+                let wind: Wind = new Wind(Winds.South);
+                let round: Round = new Wind(Winds.East);
+
+                for (const tile of tiles) {
+                    if (tile instanceof Tile) {
+                        handTiles.push(tile.format());
+                    } else if (tile instanceof Stolen) {
+                        stolenTiles.push(tile.format());
+                    } else if (tile instanceof Ron) {
+                        ron = tile;
+                    } else if (tile instanceof Wind) {
+                        wind = tile;
+                    } else if (tile instanceof Round) {
+                        round = tile;
+                    } else if (tile instanceof Flag) {
+                        flags.push(tile.format());
+                    }
+                }
+
+                const data: string[] = [];
+                if (handTiles.length > 0) {
+                    data.push(handTiles.join(''));
+                }
+                if (stolenTiles.length > 0) {
+                    data.push(...stolenTiles);
+                }
+                if (ron !== undefined) {
+                    data.push(ron.format());
+                }
+                
+                flags.push(wind.format(), round.format());
+                data.push(flags.join(''));
+
+                arg = data.join('+');
+                console.log(arg);
+            } else {
+                arg = args[0];
+            }
+
+            const riichi = new Riichi(arg);
+            const result = riichi.calc();
+            console.log(result);
+            if (result.error) {
+                message.channel.send('Invalid Hand');
+                message.react('👎');
+            } else if (result.hairi !== undefined) {
+                if (result.hairi.wait !== undefined) {
+                    message.channel.send(`Waits: ${Object.keys(result.hairi.wait).join(', ')}`);
+                    message.react('👍');
+                } else {
+                    message.channel.send('Invalid Hand');
+                    message.react('👎');
+                }
+            } else {
+                message.channel.send([
+                    `${result.ten} ${this.scores(result.name)}`,
+                    `${result.oya.join(', ')} Dealer Win`,
+                    `${result.ko.join(', ')} Non-Dealer Win`,
+                    `${result.han} Han / ${result.fu} Fu`,
+                    'Yaku:',
+                    ...Object.entries(result.yaku)
+                        .sort(([_key1, value1], [_key2, value2]) => {
+                            if (value1 > value2) {
+                                return 1;
+                            } else if (value1 < value2) {
+                                return -1;
+                            } else {
+                                return 0;
+                            }
+                        })
+                        .map(([key, value]) => `  •  ${this.hans(value.replace('飜', ' Han'))}: ${this.yaku(key)}`),
+                ].join('\n'));
+                message.react('👍');
+            }
+        } catch (exception) {
+            console.log(exception);
+
             message.channel.send('Invalid Hand');
             message.react('👎');
-        } else if (result.yakuman > 0) {
-            message.channel.send([
-                `${result.ten} ${this.scores(result.name)}`,
-                `${result.oya.join(', ')} Dealer Win`,
-                `${result.ko.join(', ')} Non-Dealer Win`,
-            ].join('\n'));
-            message.react('👍');
-        } else {
-            message.channel.send([
-                `${result.ten} ${this.scores(result.name)}`,
-                `${result.oya.join(', ')} Dealer Win`,
-                `${result.ko.join(', ')} Non-Dealer Win`,
-                `${result.han} Han / ${result.fu} Fu`,
-                'Yaku:',
-                ...Object.entries(result.yaku)
-                    .filter(([_, value]) => value.endsWith('飜'))
-                    .sort(([_key1, value1], [_key2, value2]) => {
-                        if (value1 > value2) {
-                            return 1;
-                        } else if (value1 < value2) {
-                            return -1;
-                        } else {
-                            return 0;
-                        }
-                    })
-                    .map(([key, value]) => `    ${value.replace('飜', ' Han')}: ${this.yaku(key)}`),
-            ].join('\n'));
-            message.react('👍');
         }
     }
 
-    scoresLookup: {[name: string]: string} = {
+    hanLookup: { [name: string]: string } = {
+        '役満': 'Yakuman',
+    }
+
+    hans = (name: string) => {
+        return this.hanLookup[name] ?? name;
+    }
+
+    scoreLookup: { [name: string]: string } = {
         '満貫': 'Mangan',
         '跳満': 'Haneman',
         '倍満': 'Baiman',
@@ -93,16 +362,16 @@ class RiichiBot {
     };
 
     scores = (name: string) => {
-        return this.scoresLookup[name] ?? name;
+        return this.scoreLookup[name] ?? name;
     }
 
-    yakuLookup: {[name: string]: string} = {
+    yakuLookup: { [name: string]: string } = {
         '立直': 'Ready Hand (Riichi)',
         '一発': 'One-Shot (Ippatsu)',
         '門前清自摸和': 'All Concealed (Menzenchin Tsumohou)',
         '平和': 'Flat Hand (Pinfu)',
         '一盃口': 'Double Sequence (Iipeikou)',
-        '断幺九': 'Simple Hand (Tanyao(Chuu))',
+        '断么九': 'Simple Hand (Tanyaoooooooooooooo)',
         '役牌': 'Value Triplet (Set) (Yakuhai)',
         '役牌中': 'Value Triplet (Set) (Yakuhai)',
         '役牌発': 'Value Triplet (Set) (Yakuhai)',
@@ -125,6 +394,7 @@ class RiichiBot {
         '三色同順': 'Triple Sequence (Sanshoku Doujun)',
         '一気通貫': 'Straight (Ittsu (Ikkitsuukan))',
         '対々': 'All Triplets (Toitoi)',
+        '対々和': 'All Triplets (Toitoi)',
         '三暗刻': 'Three Concealed Triplets (Sanankou)',
         '三色同刻': 'Triple Triplets (Sanshoku Doukou)',
         '三槓子': 'Three Kans (Sankantsu)',
