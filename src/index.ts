@@ -301,14 +301,14 @@ class RiichiBot {
             console.log(result);
             if (result.error) {
                 message.channel.send('Invalid Hand');
-                message.react('👎');
+                message.react('💩');
             } else if (result.hairi !== undefined) {
                 if (result.hairi.wait !== undefined) {
                     message.channel.send(`Waits: ${Object.keys(result.hairi.wait).join(', ')}`);
-                    message.react('👍');
+                    message.react('🀄');
                 } else {
                     message.channel.send('Invalid Hand');
-                    message.react('👎');
+                    message.react('💩');
                 }
             } else {
                 message.channel.send([
@@ -329,13 +329,13 @@ class RiichiBot {
                         })
                         .map(([key, value]) => `  •  ${this.hans(value.replace('飜', ' Han'))}: ${this.yaku(key)}`),
                 ].join('\n'));
-                message.react('👍');
+                message.react('🀄');
             }
         } catch (exception) {
             console.log(exception);
 
             message.channel.send('Invalid Hand');
-            message.react('👎');
+            message.react('💩');
         }
     }
 
@@ -354,11 +354,10 @@ class RiichiBot {
         '倍満': 'Baiman',
         '三倍満': 'Sanbaiman',
         '役満': 'Yakuman',
-        '2倍役満': 'Double Yakuman',
-        '3倍役満': 'Double Yakuman',
-        '4倍役満': 'Double Yakuman',
-        '5倍役満': 'Double Yakuman',
-        '6倍役満': 'Double Yakuman',
+        '倍役満': 'Double Yakuman',
+        '2倍役満': '2 Double Yakuman',
+        '3倍役満': '3 Double Yakuman',
+        '4倍役満': '4 Double Yakuman',
         '包': 'Pao',
     };
 
