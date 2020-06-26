@@ -341,6 +341,7 @@ class RiichiBot {
 
     hanLookup: { [name: string]: string } = {
         '役満': 'Yakuman',
+        'ダブル役満': 'Double Yakuman',
     }
 
     hans = (name: string) => {
@@ -409,6 +410,7 @@ class RiichiBot {
         '国士無双': 'Thirteen Orphans (Kokushi Musou)',
         '九連宝燈': 'Nine Lanterns (Chuuren Poutou)',
         '四暗刻': 'Four Concealed Triples (Suuankou)',
+        '四暗刻単騎待ち': 'Four Concealed Triples Pair Wait (Suuankou Tanki)',
         '大三元': 'Big Three Dragons (Daisangen)',
         '緑一色': 'All Green (Ryuuiisou)',
         '字一色': 'All Word Tiles (Tsuuiisou)',
