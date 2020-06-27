@@ -1,8 +1,6 @@
 import * as Discord from 'discord.js';
 import Riichi from 'riichi';
 
-import auth from '../auth.json';
-
 function assert(input: boolean, message?: string): asserts input {
     if (!input) throw new Error(message);
 }
@@ -254,7 +252,7 @@ class RiichiBot {
                 }
             }
         });
-        this.bot.login(auth.token);
+        this.bot.login(process.env.DISCORD_BOT_TOKEN);
     }
 
     parseHand = (args: string[]) => {
