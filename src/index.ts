@@ -8,10 +8,20 @@ function assert(input: boolean, message?: string): asserts input {
 }
 
 enum Winds {
-    East = 1,
-    South = 2,
-    West = 3,
-    North = 4,
+    EastWind = 1,
+    SouthWind = 2,
+    WestWind = 3,
+    NorthWind = 4,
+}
+
+enum Honors {   
+    EastWind = 1,
+    SouthWind = 2,
+    WestWind = 3,
+    NorthWind = 4,
+    WhiteDragon = 5,
+    GreenDragon = 6,
+    RedDragon = 7,
 }
 
 abstract class Thing {
@@ -47,62 +57,62 @@ class ManTile extends SimpleTile {
 }
 
 abstract class HonorTile extends Tile {
-    index: number;
+    honor: Honors;
     count: number;
 
-    constructor(index: number, count: number) {
+    constructor(honor: Honors, count: number) {
         super();
 
-        this.index = index;
+        this.honor = honor;
         this.count = !isNaN(count) && isFinite(count) && count > 0 ? count : 1;
     }
 
-    format = () => `${`${this.index}`.repeat(this.count)}z`;
+    format = () => `${`${this.honor.valueOf()}`.repeat(this.count)}z`;
 }
 
 abstract class WindTile extends HonorTile {}
 
 class EastWindTile extends WindTile {
     constructor(count: number) {
-        super(1, count);
+        super(Honors.EastWind, count);
     }
 }
 
 class SouthWindTile extends WindTile {
     constructor(count: number) {
-        super(2, count);
+        super(Honors.SouthWind, count);
     }
 }
 
 class WestWindTile extends WindTile {
     constructor(count: number) {
-        super(3, count);
+        super(Honors.WestWind, count);
     }
 }
 
 class NorthWindTile extends WindTile {
     constructor(count: number) {
-        super(4, count);
+        super(Honors.NorthWind, count);
     }
 }
 
 abstract class DragonTile extends HonorTile {}
 
+class WhiteDragonTile extends DragonTile {
+    constructor(count: number) {
+        super(Honors.WhiteDragon, count);
+    }
+}
+
 class GreenDragonTile extends DragonTile {
     constructor(count: number) {
-        super(5, count);
+        super(Honors.GreenDragon, count);
     }
 }
 
 class RedDragonTile extends DragonTile {
     constructor(count: number) {
-        super(6, count);
-    }
-}
-
-class WhiteDragonTile extends DragonTile {
-    constructor(count: number) {
-        super(7, count);
+        super(Honors.RedDragon, count);
     }
 }
 
@@ -190,10 +200,10 @@ class WindFlag extends Flag {
 }
 
 const windLookup: {[wind: string]: Winds} = {
-    'east': Winds.East,
-    'south': Winds.South,
-    'west': Winds.West,
-    'north': Winds.North,
+    'east': Winds.EastWind,
+    'south': Winds.SouthWind,
+    'west': Winds.WestWind,
+    'north': Winds.NorthWind,
 };
 const tileLookup: { [tag: string]: (values: string[]) => Tile } = {
     'sou': (values) => new SouTile(values[0]),
@@ -262,8 +272,8 @@ class RiichiBot {
         const dora: Dora[] = [];
         const flags: Flag[] = [];
         let ron: Ron | undefined;
-        let wind: WindFlag = new WindFlag(Winds.South);
-        let round: RoundFlag = new RoundFlag(Winds.East);
+        let wind: WindFlag = new WindFlag(Winds.SouthWind);
+        let round: RoundFlag = new RoundFlag(Winds.EastWind);
 
         for (const tile of tiles) {
             if (tile instanceof Tile) {
