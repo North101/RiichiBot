@@ -28,7 +28,7 @@ abstract class SimpleTile extends Tile {
     constructor(value: string) {
         super();
 
-        assert(value.length > 0);
+        assert(value.length > 0 && value.split('').every((v) => v.match(/[1-9]/)));
 
         this.value = value;
     }
@@ -53,10 +53,8 @@ abstract class HonorTile extends Tile {
     constructor(index: number, count: number) {
         super();
 
-        assert(!isNaN(count) || !isFinite(count) && count > 0);
-
         this.index = index;
-        this.count = count;
+        this.count = !isNaN(count) && isFinite(count) && count > 0 ? count : 1;
     }
 
     format = () => `${`${this.index}`.repeat(this.count)}z`;
