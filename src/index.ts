@@ -242,6 +242,12 @@ class RiichiBot {
         this.bot.on('ready', () => {
             console.log('Connected');
             console.log(`Logged in as: ${bot.user?.username} (${bot.user?.id})`);
+
+            this.bot.user!.setAvatar('https://iconarchive.com/icons/google/noto-emoji-activities/1024/52779-mahjong-red-dragon-icon.png');
+            this.bot.user!.setActivity({
+                name: '!riichi',
+                type: 'LISTENING',
+            });
         });
         this.bot.on('message', (message) => {
             if (message.author.bot) return;
