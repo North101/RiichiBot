@@ -28,7 +28,7 @@ abstract class SimpleTile extends Tile {
     constructor(value: string) {
         super();
 
-        assert(value.length > 0 && value.split('').every((v) => v.match(/[1-9]/)));
+        assert(value.length > 0 && value.split('').every((v) => v.match(/[0-9]/)));
 
         this.value = value;
     }
@@ -106,38 +106,17 @@ class WhiteDragonTile extends DragonTile {
     }
 }
 
-
-class Wind extends Thing {
-    wind: Winds;
-
-    constructor(wind: Winds) {
-        super();
-        this.wind = wind;
-    }
-
-    format = () => `${this.wind.valueOf()}`;
-}
-
 class Stolen extends Thing {
     tile: Tile;
 
     constructor(tile: Tile) {
         super();
+
+        assert(tile !== undefined);
         this.tile = tile;
     }
 
     format = () => `${this.tile.format()}`;
-}
-
-class Round extends Thing {
-    wind: Winds;
-
-    constructor(wind: Winds) {
-        super();
-        this.wind = wind;
-    }
-
-    format = () => `${this.wind.valueOf()}`;
 }
 
 class Ron extends Thing {
@@ -145,6 +124,8 @@ class Ron extends Thing {
 
     constructor(tile: Tile) {
         super();
+
+        assert(tile !== undefined);
         this.tile = tile;
     }
 
@@ -156,6 +137,8 @@ class Dora extends Thing {
 
     constructor(tile: Tile) {
         super();
+
+        assert(tile !== undefined);
         this.tile = tile;
     }
 
@@ -178,6 +161,32 @@ class RinshanFlag extends Flag {
 
 class HaiteiFlag extends Flag {
     format = () => 'h';
+}
+
+class RoundFlag extends Flag {
+    wind: Winds;
+
+    constructor(wind: Winds) {
+        super();
+
+        assert(wind !== undefined);
+        this.wind = wind;
+    }
+
+    format = () => `${this.wind.valueOf()}`;
+}
+
+class WindFlag extends Flag {
+    wind: Winds;
+
+    constructor(wind: Winds) {
+        super();
+
+        assert(wind !== undefined);
+        this.wind = wind;
+    }
+
+    format = () => `${this.wind.valueOf()}`;
 }
 
 const windLookup: {[wind: string]: Winds} = {
@@ -208,11 +217,12 @@ const lookup: { [tag: string]: (values: string[]) => Thing } = {
     'rinshan': (_values) => new RinshanFlag(),
     'haitei': (_values) => new HaiteiFlag(),
     'houtei': (_values) => new HaiteiFlag(),
-    'wind': (values) => new Wind(windLookup[values[0]]),
-    'round': (values) => new Round(windLookup[values[0]]),
+    'wind': (values) => new WindFlag(windLookup[values[0]]),
+    'round': (values) => new RoundFlag(windLookup[values[0]]),
 };
 
 class RiichiBot {
+    separator = '=';
     bot: Discord.Client;
 
     constructor(bot: Discord.Client) {
@@ -237,96 +247,97 @@ class RiichiBot {
         this.bot.login(auth.token);
     }
 
-    isPlayerMention = (mention: string) => {
-        return mention.startsWith('<@') && mention.endsWith('>');
-    }
-
-    parsePlayerMention = (mention: string) => {
-        let playerID = mention.slice(2, -1);
-        if (playerID.startsWith('!')) {
-            return playerID.slice(1);
+    parseHand = (args: string[]) => {
+        const tiles: Thing[] = [];
+        for (const arg of args) {
+            const [tag, ...values] = arg.split(this.separator);
+            const tile = (lookup[tag] ?? tileLookup[tag])?.(values);
+            if (tile !== undefined) {
+                tiles.push(tile);
+            }
         }
-        return playerID;
+
+        const handTiles: Tile[] = [];
+        const stolenTiles: Stolen[] = [];
+        const dora: Dora[] = [];
+        const flags: Flag[] = [];
+        let ron: Ron | undefined;
+        let wind: WindFlag = new WindFlag(Winds.South);
+        let round: RoundFlag = new RoundFlag(Winds.East);
+
+        for (const tile of tiles) {
+            if (tile instanceof Tile) {
+                handTiles.push(tile);
+            } else if (tile instanceof Stolen) {
+                stolenTiles.push(tile);
+            } else if (tile instanceof Dora) {
+                dora.push(tile);
+            } else if (tile instanceof Flag) {
+                flags.push(tile);
+            } else if (tile instanceof Ron) {
+                ron = tile;
+            } else if (tile instanceof WindFlag) {
+                wind = tile;
+            } else if (tile instanceof RoundFlag) {
+                round = tile;
+            }
+        }
+
+        const data: string[] = [];
+        if (handTiles.length > 0) {
+            data.push(handTiles.map((tile) => tile.format()).join(''));
+        }
+        if (stolenTiles.length > 0) {
+            data.push(...stolenTiles.map((tile) => tile.format()));
+        }
+        if (ron !== undefined) {
+            data.push(ron.format());
+        }
+        if (dora.length > 0) {
+            data.push(...dora.map((tile) => tile.format()));
+        }
+        
+        flags.push(round, wind);
+        data.push(flags.map((flag) => flag.format()).join(''));
+
+        return data.join('+');
     }
 
     handle = (message: Discord.Message, args: string[]) => {
-        let arg: string;
+        let arg: string = message.content;
         try {
-            if (args[0].includes(':') || args.length > 1) {
-                const tiles = new Array<Thing>();
-                for (const arg of args) {
-                    const [tag, ...values] = arg.split(':');
-                    const tile = (lookup[tag] ?? tileLookup[tag])?.(values);
-                    if (tile !== undefined) {
-                        tiles.push(tile);
-                    }
-                }
-
-                const handTiles: string[] = [];
-                const stolenTiles: string[] = [];
-                let ron: Ron | undefined;
-                let dora: string[] = [];
-                let flags = new Array<string>();
-                let wind: Wind = new Wind(Winds.South);
-                let round: Round = new Wind(Winds.East);
-
-                for (const tile of tiles) {
-                    if (tile instanceof Tile) {
-                        handTiles.push(tile.format());
-                    } else if (tile instanceof Stolen) {
-                        stolenTiles.push(tile.format());
-                    } else if (tile instanceof Ron) {
-                        ron = tile;
-                    } else if (tile instanceof Dora) {
-                        dora.push(tile.format());
-                    } else if (tile instanceof Wind) {
-                        wind = tile;
-                    } else if (tile instanceof Round) {
-                        round = tile;
-                    } else if (tile instanceof Flag) {
-                        flags.push(tile.format());
-                    }
-                }
-
-                const data: string[] = [];
-                if (handTiles.length > 0) {
-                    data.push(handTiles.join(''));
-                }
-                if (stolenTiles.length > 0) {
-                    data.push(...stolenTiles);
-                }
-                if (ron !== undefined) {
-                    data.push(ron.format());
-                }
-                if (dora.length > 0) {
-                    data.push(...dora);
-                }
-                
-                flags.push(wind.format(), round.format());
-                data.push(flags.join(''));
-
-                arg = data.join('+');
-                console.log(arg);
+            if (args[0].includes(this.separator) || args.length > 1) {
+                arg = this.parseHand(args);
             } else {
                 arg = args[0];
             }
+            console.log(arg);
 
             const riichi = new Riichi(arg);
             const result = riichi.calc();
             console.log(result);
             if (result.error) {
-                message.channel.send('Invalid Hand');
+                message.channel.send([
+                    arg,
+                    'Invalid Hand',
+                ].join('\n'));
                 message.react('💩');
             } else if ('hairi' in result) {
+                const now = result.hairi.now;
+                const wait = result.hairi.wait;
                 const hairi = Object.entries(result.hairi)
-                    .filter(([key, _value]) => key !== 'now')
-                    .reduce((result, [key, value]) => result.set(key, value), new Map());
+                    .filter(([key, _value]) => !['now', 'wait'].includes(key))
+                    .reduce((result, [key, value]) => result.set(key, value), new Map<string, {[tile: string]: number}>());
 
-                if (hairi.has('wait')) {
-                    message.channel.send(`Waits: ${Object.keys(hairi.get('wait')).join(', ')}`);
+                if (wait !== undefined) {
+                    message.channel.send([
+                        arg,
+                        `Waits: ${Object.keys(wait).join(', ')}`
+                    ].join('\n'));
                     message.react('🀄');
                 } else if (hairi.size > 0) {
                     message.channel.send([
+                        arg,
                         'Invalid Hand. Replace:',
                         ...[...hairi.entries()].map(([key, value]) => {
                             return `${key}: ${Object.keys(value).join(', ')}`;
@@ -334,11 +345,15 @@ class RiichiBot {
                     ].join('\n'));
                     message.react('🀄');
                 } else {
-                    message.channel.send('Invalid Hand');
+                    message.channel.send([
+                        arg,
+                        'Invalid Hand'
+                    ].join('\n'));
                     message.react('💩');
                 }
             } else {
                 message.channel.send([
+                    arg,
                     `${result.ten} ${this.scores(result.name)}`,
                     `${result.oya.join(', ')} Dealer Win`,
                     `${result.ko.join(', ')} Non-Dealer Win`,
@@ -361,7 +376,10 @@ class RiichiBot {
         } catch (exception) {
             console.log(exception);
 
-            message.channel.send('Invalid Hand');
+            message.channel.send([
+                arg,
+                'Invalid Hand',
+            ].join('\n'));
             message.react('💩');
         }
     }
