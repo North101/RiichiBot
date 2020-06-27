@@ -39,9 +39,9 @@ abstract class SimpleTile extends Tile {
     constructor(value: string) {
         super();
 
-        assert(value.length > 0 && value.split('').every((v) => v.match(/[0-9]/)));
+        assert(value.length > 0 && value.split('').every((v) => v.match(/[0-9Rr]/g)));
 
-        this.value = value;
+        this.value = value.replace(/[Rr]/g, '0');
     }
 }
 
