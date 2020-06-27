@@ -151,6 +151,17 @@ class Ron extends Thing {
     format = () => this.tile.format();
 }
 
+class Dora extends Thing {
+    tile: Tile;
+
+    constructor(tile: Tile) {
+        super();
+        this.tile = tile;
+    }
+
+    format = () => `d${this.tile.format()}`;
+}
+
 abstract class Flag extends Thing {}
 
 class RiichiFlag extends Flag {
@@ -168,7 +179,6 @@ class RinshanFlag extends Flag {
 class HaiteiFlag extends Flag {
     format = () => 'h';
 }
-
 
 const windLookup: {[wind: string]: Winds} = {
     'east': Winds.East,
@@ -191,6 +201,7 @@ const tileLookup: { [tag: string]: (values: string[]) => Tile } = {
 const lookup: { [tag: string]: (values: string[]) => Thing } = {
     'stolen': (values) => new Stolen(tileLookup[values[0]]?.(values.slice(1))),
     'ron': (values) => new Ron(tileLookup[values[0]]?.(values.slice(1))),
+    'dora': (values) => new Dora(tileLookup[values[0]]?.(values.slice(1))),
     'riichi': (_values) => new RiichiFlag(),
     'ippatsu': (_values) => new IppatsuFlag(),
     'chankan': (_values) => new RinshanFlag(),
@@ -254,6 +265,7 @@ class RiichiBot {
                 const handTiles: string[] = [];
                 const stolenTiles: string[] = [];
                 let ron: Ron | undefined;
+                let dora: string[] = [];
                 let flags = new Array<string>();
                 let wind: Wind = new Wind(Winds.South);
                 let round: Round = new Wind(Winds.East);
@@ -265,6 +277,8 @@ class RiichiBot {
                         stolenTiles.push(tile.format());
                     } else if (tile instanceof Ron) {
                         ron = tile;
+                    } else if (tile instanceof Dora) {
+                        dora.push(tile.format());
                     } else if (tile instanceof Wind) {
                         wind = tile;
                     } else if (tile instanceof Round) {
@@ -283,6 +297,9 @@ class RiichiBot {
                 }
                 if (ron !== undefined) {
                     data.push(ron.format());
+                }
+                if (dora.length > 0) {
+                    data.push(...dora);
                 }
                 
                 flags.push(wind.format(), round.format());
@@ -376,6 +393,8 @@ class RiichiBot {
     }
 
     yakuLookup: { [name: string]: string } = {
+        'ドラ': 'Dora',
+        '赤ドラ': 'Red Five',
         '立直': 'Ready Hand (Riichi)',
         '一発': 'One-Shot (Ippatsu)',
         '門前清自摸和': 'All Concealed (Menzenchin Tsumohou)',
