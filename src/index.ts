@@ -365,9 +365,9 @@ class RiichiBot {
         '三倍満': 'Sanbaiman',
         '役満': 'Yakuman',
         '倍役満': 'Double Yakuman',
-        '2倍役満': '2 Double Yakuman',
-        '3倍役満': '3 Double Yakuman',
-        '4倍役満': '4 Double Yakuman',
+        '2倍役満': '2x Double Yakuman',
+        '3倍役満': '3x Double Yakuman',
+        '4倍役満': '4x Double Yakuman',
         '包': 'Pao',
     };
 
@@ -428,7 +428,7 @@ class RiichiBot {
         '清老頭': 'All Ends (Chinroutou)',
         '四槓子': 'Four Kans (Suukantsu)',
         '人和': 'Miracle Discard (Renhou)',
-        '流し満貫': 'Pool Of Dreams*** (Nagashi Mangan)',
+        '流し満貫': 'Pool Of Dreams (Nagashi Mangan)',
         '数え役満': 'Counted Yakuman (Kazoe Yakuman)',
     };
 
