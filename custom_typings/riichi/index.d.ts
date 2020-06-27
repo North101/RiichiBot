@@ -11,16 +11,20 @@ declare module 'riichi' {
         oya: [number, number, number] | [number];
         ko: [number, number, number] | [number];
         error: boolean;
-        hairi?: {
+    }
+
+    export interface RiichiCalcHairi extends RiichiCalc {
+        hairi: {
+            [tile: string]: {
+                [tile: string]: number;
+            };
+        } & {
             now: number;
             wait?: {
                 [tile: string]: number;
             };
-            [tile: string]: {
-                [tile: string]: number;
-            };
         };
-        hairi7and13?: {
+        hairi7and13: {
             now: number;
             wait?: {
                 [tile: string]: number;
@@ -36,7 +40,7 @@ declare module 'riichi' {
         calcFu(): void;
         calcTen(): void;
         calcYaku(): void;
-        calc(): RiichiCalc;
+        calc(): RiichiCalc | RiichiCalcHairi;
         disableWyakuman(): void;
         disableKuitan(): void;
         disableAka(): void;
