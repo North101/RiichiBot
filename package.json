@@ -1,16 +1,18 @@
 {
   "main": "src/index.ts",
   "scripts": {
-    "start": "ts-node .",
-    "lint": "eslint ."
+    "start": "ts-node ."
   },
-  "devDependencies": {
+  "devDependencies": {},
+  "dependencies": {
     "@types/node": "^14.0.14",
+    "discord.js": "^12.2.0",
+    "dotenv": "^8.2.0",
+    "riichi": "^1.1.2",
     "ts-node": "^8.10.2",
     "typescript": "^3.9.5"
   },
-  "dependencies": {
-    "discord.js": "^12.2.0",
-    "riichi": "^1.1.2"
+  "engines": {
+    "node": "14.x"
   }
 }

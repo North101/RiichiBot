@@ -1,5 +1,8 @@
 import * as Discord from 'discord.js';
 import Riichi from 'riichi';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 function assert(input: boolean, message?: string): asserts input {
     if (!input) throw new Error(message);
