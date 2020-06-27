@@ -300,9 +300,19 @@ class RiichiBot {
             if (result.error) {
                 message.channel.send('Invalid Hand');
                 message.react('💩');
-            } else if (result.hairi !== undefined) {
-                if (result.hairi.wait !== undefined) {
-                    message.channel.send(`Waits: ${Object.keys(result.hairi.wait).join(', ')}`);
+            } else if (result?.hairi !== undefined) {
+                const hairi = result.hairi;
+                delete hairi['now'];
+                if (hairi.wait !== undefined) {
+                    message.channel.send(`Waits: ${Object.keys(hairi.wait).join(', ')}`);
+                    message.react('🀄');
+                } else if (Object.keys(hairi).length > 0) {
+                    message.channel.send([
+                        'Invalid Hand. Replace:',
+                        ...Object.entries(hairi).map(([key, value]) => {
+                            return `${key}: ${Object.keys(value).join(', ')}`;
+                        })
+                    ].join('\n'));
                     message.react('🀄');
                 } else {
                     message.channel.send('Invalid Hand');

@@ -16,6 +16,9 @@ declare module 'riichi' {
             wait?: {
                 [tile: string]: number;
             };
+            [tile: string]: {
+                [tile: string]: number;
+            };
         };
         hairi7and13?: {
             now: number;
