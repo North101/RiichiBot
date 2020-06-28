@@ -1,5 +1,17 @@
 declare module 'riichi' {
-    export interface RiichiCalc {
+    export interface Hairi {
+        now: number;
+        wait?: {
+            [tile: string]: number;
+        };
+    }
+    export interface HairiReplace {
+        [tile: string]: {
+            [tile: string]: number;
+        };
+    }
+
+    export interface RiichiResult {
         isAgari: boolean;
         yakuman: number;
         yaku: {[name: string]: string};
@@ -13,27 +25,9 @@ declare module 'riichi' {
         error: boolean;
     }
 
-    export interface RiichiCalcHairi extends RiichiCalc {
-        hairi: {
-            [tile: string]: {
-                [tile: string]: number;
-            };
-        } & {
-            now: number;
-            wait?: {
-                [tile: string]: number;
-            };
-        };
-        hairi7and13: {
-            [tile: string]: {
-                [tile: string]: number;
-            };
-        } & {
-            now: number;
-            wait?: {
-                [tile: string]: number;
-            };
-        };
+    export interface RiichiResultHairi extends RiichiResult {
+        hairi: Hairi & HairiReplace;
+        hairi7and13: Hairi & HairiReplace;
     }
 
     export default class Riichi {
@@ -44,7 +38,7 @@ declare module 'riichi' {
         calcFu(): void;
         calcTen(): void;
         calcYaku(): void;
-        calc(): RiichiCalc | RiichiCalcHairi;
+        calc(): RiichiResult | RiichiResultHairi;
         disableWyakuman(): void;
         disableKuitan(): void;
         disableAka(): void;

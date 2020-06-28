@@ -1,6 +1,6 @@
 import * as Discord from 'discord.js';
 import dotenv from 'dotenv';
-import Riichi from 'riichi';
+import Riichi, { RiichiResult, Hairi, HairiReplace } from 'riichi';
 
 dotenv.config();
 
@@ -234,6 +234,9 @@ const lookup: { [tag: string]: (values: string[]) => HandElement } = {
 
 class RiichiBot {
     separator = '=';
+    goodEmoji = '🀄';
+    badEmoji = '💩';
+
     bot: Discord.Client;
 
     constructor(bot: Discord.Client) {
@@ -336,100 +339,73 @@ class RiichiBot {
             const result = riichi.calc();
             console.log(result);
             if (result.error) {
-                message.channel.send([
-                    arg,
-                    'Invalid Hand',
-                ].join('\n'));
-                message.react('💩');
+                this.handleError(message, arg);
             } else if ('hairi' in result && result.hairi.now === 0) {
-                const now = result.hairi.now;
-                const wait = result.hairi.wait;
-                const hairi = Object.entries(result.hairi)
-                    .filter(([key, _value]) => !['now', 'wait'].includes(key))
-                    .reduce((result, [key, value]) => result.set(key, value), new Map<string, {[tile: string]: number}>());
-                
-                if (wait !== undefined) {
-                    message.channel.send([
-                        arg,
-                        `Waits: ${Object.keys(wait).join(', ')}`
-                    ].join('\n'));
-                    message.react('🀄');
-                } else if (hairi.size > 0) {
-                    message.channel.send([
-                        arg,
-                        'Invalid Hand. Replace:',
-                        ...[...hairi.entries()].map(([key, value]) => {
-                            return `${key}: ${Object.keys(value).join(', ')}`;
-                        })
-                    ].join('\n'));
-                    message.react('🀄');
-                } else {
-                    message.channel.send([
-                        arg,
-                        'Invalid Hand'
-                    ].join('\n'));
-                    message.react('💩');
-                }
+                this.handleHairi(message, arg, result.hairi);
             } else if ('hairi7and13' in result && result.hairi7and13.now === 0) {
-                const now = result.hairi7and13.now;
-                const wait = result.hairi7and13.wait;
-                const hairi7and13 = Object.entries(result.hairi7and13)
-                    .filter(([key, _value]) => !['now', 'wait'].includes(key))
-                    .reduce((result, [key, value]) => result.set(key, value), new Map<string, {[tile: string]: number}>());
-                
-                if (wait !== undefined) {
-                    message.channel.send([
-                        arg,
-                        `Waits: ${Object.keys(wait).join(', ')}`
-                    ].join('\n'));
-                    message.react('🀄');
-                } else if (hairi7and13.size > 0) {
-                    message.channel.send([
-                        arg,
-                        'Invalid Hand. Replace:',
-                        ...[...hairi7and13.entries()].map(([key, value]) => {
-                            return `${key}: ${Object.keys(value).join(', ')}`;
-                        })
-                    ].join('\n'));
-                    message.react('🀄');
-                } else {
-                    message.channel.send([
-                        arg,
-                        'Invalid Hand'
-                    ].join('\n'));
-                    message.react('💩');
-                }
+                this.handleHairi(message, arg, result.hairi7and13);
             } else {
-                message.channel.send([
-                    arg,
-                    `${result.ten} ${this.scores(result.name)}`,
-                    `${result.oya.join(', ')} Dealer Win`,
-                    `${result.ko.join(', ')} Non-Dealer Win`,
-                    `${result.han} Han / ${result.fu} Fu`,
-                    'Yaku:',
-                    ...Object.entries(result.yaku)
-                        .sort(([_key1, value1], [_key2, value2]) => {
-                            if (value1 > value2) {
-                                return 1;
-                            } else if (value1 < value2) {
-                                return -1;
-                            } else {
-                                return 0;
-                            }
-                        })
-                        .map(([key, value]) => `  •  ${this.hans(value.replace('飜', ' Han'))}: ${this.yaku(key)}`),
-                ].join('\n'));
-                message.react('🀄');
+                this.handleScore(message, arg, result);
             }
         } catch (exception) {
             console.log(exception);
 
-            message.channel.send([
-                arg,
-                'Invalid Hand',
-            ].join('\n'));
-            message.react('💩');
+            this.handleError(message, arg);
         }
+    }
+
+    handleError = (message: Discord.Message, arg: string) => {
+        message.channel.send([
+            `Results For: ${arg}`,
+            'Invalid Hand',
+        ].join('\n'));
+        message.react(this.badEmoji);
+    }
+
+    handleHairi = (message: Discord.Message, arg: string, hairi: Hairi & HairiReplace) => {
+        const { now, wait, ...replacements } = hairi;
+
+        if (wait !== undefined) {
+            message.channel.send([
+                `Results For: ${arg}`,
+                `Waits: ${Object.entries(wait).map(([tile, count]) => `${tile} (x${count})`).join(', ')}`
+            ].join('\n'));
+            message.react(this.goodEmoji);
+        } else if (Object.keys(replacements).length > 0) {
+            message.channel.send([
+                `Results For: ${arg}`,
+                'Invalid Hand. Replace:',
+                ...Object.entries(replacements).map(([key, value]) => {
+                    return `${key}: ${Object.entries(value).map(([tile, count]) => `${tile} (x${count})`).join(', ')}`;
+                })
+            ].join('\n'));
+            message.react(this.goodEmoji);
+        } else {
+            this.handleError(message, arg);
+        }
+    }
+
+    handleScore = (message: Discord.Message, arg: string, result: RiichiResult) => {
+        message.channel.send([
+            `Results For: ${arg}`,
+            `${result.ten} ${this.scores(result.name)}`,
+            `${result.oya.join(', ')} Dealer Win`,
+            `${result.ko.join(', ')} Non-Dealer Win`,
+            `${result.han} Han / ${result.fu} Fu`,
+            'Yaku:',
+            ...Object.entries(result.yaku)
+                .sort(([_key1, value1], [_key2, value2]) => {
+                    if (value1 > value2) {
+                        return 1;
+                    } else if (value1 < value2) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                })
+                .map(([key, value]) => `  •  ${this.hans(value.replace('飜', ' Han'))}: ${this.yaku(key)}`),
+        ].join('\n'));
+        message.react(this.goodEmoji);
     }
 
     hanLookup: { [name: string]: string } = {
