@@ -473,6 +473,7 @@ class RiichiBot {
         '天和': 'Miracle Start (Dealer) (Tenhou)',
         '地和': 'Miracle Start (Non-Dealer) (Chiihou)',
         '国士無双': 'Thirteen Orphans (Kokushi Musou)',
+        '国士無双十三面待ち': 'Thirteen Orphans 13 Sided Wait (Kokushi Musou Jū San Menmachi)',
         '九連宝燈': 'Nine Lanterns (Chuuren Poutou)',
         '四暗刻': 'Four Concealed Triples (Suuankou)',
         '四暗刻単騎待ち': 'Four Concealed Triples Pair Wait (Suuankou Tanki)',
