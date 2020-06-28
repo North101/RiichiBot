@@ -25,11 +25,11 @@ enum Honors {
     RedDragon = 7,
 }
 
-abstract class Thing {
+abstract class HandElement {
     abstract format(): string;
 }
 
-abstract class Tile extends Thing {
+abstract class Tile extends HandElement {
     abstract format(): string;
 }
 
@@ -117,7 +117,7 @@ class RedDragonTile extends DragonTile {
     }
 }
 
-class Stolen extends Thing {
+class Stolen extends HandElement {
     tile: Tile;
 
     constructor(tile: Tile) {
@@ -130,7 +130,7 @@ class Stolen extends Thing {
     format = () => `${this.tile.format()}`;
 }
 
-class Ron extends Thing {
+class Ron extends HandElement {
     tile: Tile;
 
     constructor(tile: Tile) {
@@ -143,7 +143,7 @@ class Ron extends Thing {
     format = () => this.tile.format();
 }
 
-class Dora extends Thing {
+class Dora extends HandElement {
     tile: Tile;
 
     constructor(tile: Tile) {
@@ -156,7 +156,7 @@ class Dora extends Thing {
     format = () => `d${this.tile.format()}`;
 }
 
-abstract class Flag extends Thing {}
+abstract class Flag extends HandElement {}
 
 class RiichiFlag extends Flag {
     format = () => 'r';
@@ -218,7 +218,7 @@ const tileLookup: { [tag: string]: (values: string[]) => Tile } = {
     'red': (values) => new RedDragonTile(parseInt(values[0])),
     'white': (values) => new WhiteDragonTile(parseInt(values[0])),
 };
-const lookup: { [tag: string]: (values: string[]) => Thing } = {
+const lookup: { [tag: string]: (values: string[]) => HandElement } = {
     'stolen': (values) => new Stolen(tileLookup[values[0]]?.(values.slice(1))),
     'ron': (values) => new Ron(tileLookup[values[0]]?.(values.slice(1))),
     'dora': (values) => new Dora(tileLookup[values[0]]?.(values.slice(1))),
@@ -265,12 +265,14 @@ class RiichiBot {
     }
 
     parseHand = (args: string[]) => {
-        const tiles: Thing[] = [];
+        const elements: HandElement[] = [];
         for (const arg of args) {
             const [tag, ...values] = arg.split(this.separator);
-            const tile = (lookup[tag] ?? tileLookup[tag])?.(values);
-            if (tile !== undefined) {
-                tiles.push(tile);
+            const element = (lookup[tag] ?? tileLookup[tag])?.(values);
+            if (element !== undefined) {
+                elements.push(element);
+            } else {
+                throw Error();
             }
         }
 
@@ -282,21 +284,21 @@ class RiichiBot {
         let wind: WindFlag = new WindFlag(Winds.SouthWind);
         let round: RoundFlag = new RoundFlag(Winds.EastWind);
 
-        for (const tile of tiles) {
-            if (tile instanceof Tile) {
-                handTiles.push(tile);
-            } else if (tile instanceof Stolen) {
-                stolenTiles.push(tile);
-            } else if (tile instanceof Dora) {
-                dora.push(tile);
-            } else if (tile instanceof Flag) {
-                flags.push(tile);
-            } else if (tile instanceof Ron) {
-                ron = tile;
-            } else if (tile instanceof WindFlag) {
-                wind = tile;
-            } else if (tile instanceof RoundFlag) {
-                round = tile;
+        for (const element of elements) {
+            if (element instanceof Tile) {
+                handTiles.push(element);
+            } else if (element instanceof Stolen) {
+                stolenTiles.push(element);
+            } else if (element instanceof Dora) {
+                dora.push(element);
+            } else if (element instanceof Flag) {
+                flags.push(element);
+            } else if (element instanceof Ron) {
+                ron = element;
+            } else if (element instanceof WindFlag) {
+                wind = element;
+            } else if (element instanceof RoundFlag) {
+                round = element;
             }
         }
 
