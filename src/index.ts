@@ -233,11 +233,14 @@ const lookup: { [tag: string]: (values: string[]) => HandElement } = {
 };
 
 class RiichiBot {
+    bot: Discord.Client;
+
+    command = '!riichi';
+    avatar = 'https://iconarchive.com/icons/google/noto-emoji-activities/1024/52779-mahjong-red-dragon-icon.png';
+
     separator = '=';
     goodEmoji = '🀄';
     badEmoji = '💩';
-
-    bot: Discord.Client;
 
     constructor(bot: Discord.Client) {
         this.bot = bot;
@@ -246,18 +249,20 @@ class RiichiBot {
             console.log('Connected');
             console.log(`Logged in as: ${bot.user?.username} (${bot.user?.id})`);
 
-            this.bot.user!.setAvatar('https://iconarchive.com/icons/google/noto-emoji-activities/1024/52779-mahjong-red-dragon-icon.png');
             this.bot.user!.setActivity({
-                name: '!riichi',
+                name: this.command,
                 type: 'LISTENING',
             });
+            if (this.bot.user!.avatarURL() !== this.avatar) {
+                this.bot.user!.setAvatar(this.avatar);
+            }
         });
         this.bot.on('message', (message) => {
             if (message.author.bot) return;
 
             const args = message.content.split(/\s+/);
             switch (args[0]) {
-                case '!riichi':
+                case this.command:
                 case `<@${this.bot.user?.id}>`:
                 case `<@!${this.bot.user?.id}>`: {
                     return this.handle(message, args.splice(1));
