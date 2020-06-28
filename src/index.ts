@@ -381,7 +381,7 @@ class RiichiBot {
                 `Results For: ${arg}`,
                 'Invalid Hand. Replace:',
                 ...Object.entries(replacements).map(([key, value]) => {
-                    return `${key}: ${Object.entries(value).map(([tile, count]) => `${tile} (x${count})`).join(', ')}`;
+                    return `  •  ${key}: ${Object.entries(value).map(([tile, count]) => `${tile} (x${count})`).join(', ')}`;
                 })
             ].join('\n'));
             message.react(this.goodEmoji);
