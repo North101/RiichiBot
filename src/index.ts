@@ -16,10 +16,10 @@ enum Winds {
 }
 
 enum Honors {   
-    EastWind = 1,
-    SouthWind = 2,
-    WestWind = 3,
-    NorthWind = 4,
+    EastWind = Winds.EastWind,
+    SouthWind = Winds.SouthWind,
+    WestWind = Winds.WestWind,
+    NorthWind = Winds.NorthWind,
     WhiteDragon = 5,
     GreenDragon = 6,
     RedDragon = 7,
