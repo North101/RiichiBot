@@ -349,6 +349,8 @@ class RiichiBot {
                 this.handleHairi(message, arg, result.hairi);
             } else if ('hairi7and13' in result && result.hairi7and13.now === 0) {
                 this.handleHairi(message, arg, result.hairi7and13);
+            } else if (Object.keys(result.yaku).length === 0) {
+                this.handleNoYakuError(message, arg);
             } else {
                 this.handleScore(message, arg, result);
             }
@@ -363,6 +365,14 @@ class RiichiBot {
         message.channel.send([
             `Results For: ${arg}`,
             'Invalid Hand',
+        ].join('\n'));
+        message.react(this.badEmoji);
+    }
+
+    handleNoYakuError = (message: Discord.Message, arg: string) => {
+        message.channel.send([
+            `Results For: ${arg}`,
+            'No Yaku',
         ].join('\n'));
         message.react(this.badEmoji);
     }
