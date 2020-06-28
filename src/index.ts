@@ -261,11 +261,15 @@ class RiichiBot {
             if (message.author.bot) return;
 
             const args = message.content.split(/\s+/);
-            switch (args[0]) {
-                case this.command:
-                case `<@${this.bot.user?.id}>`:
-                case `<@!${this.bot.user?.id}>`: {
-                    return this.handle(message, args.splice(1));
+            if (message.channel.type === 'dm') {
+                return this.handle(message, args);
+            } else if (message.channel.type === 'text') {
+                switch (args[0]) {
+                    case this.command:
+                    case `<@${this.bot.user?.id}>`:
+                    case `<@!${this.bot.user?.id}>`: {
+                        return this.handle(message, args.splice(1));
+                    }
                 }
             }
         });
