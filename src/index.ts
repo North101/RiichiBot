@@ -341,13 +341,13 @@ class RiichiBot {
                     'Invalid Hand',
                 ].join('\n'));
                 message.react('💩');
-            } else if ('hairi' in result) {
+            } else if ('hairi' in result && result.hairi.now === 0) {
                 const now = result.hairi.now;
                 const wait = result.hairi.wait;
                 const hairi = Object.entries(result.hairi)
                     .filter(([key, _value]) => !['now', 'wait'].includes(key))
                     .reduce((result, [key, value]) => result.set(key, value), new Map<string, {[tile: string]: number}>());
-
+                
                 if (wait !== undefined) {
                     message.channel.send([
                         arg,
@@ -359,6 +359,35 @@ class RiichiBot {
                         arg,
                         'Invalid Hand. Replace:',
                         ...[...hairi.entries()].map(([key, value]) => {
+                            return `${key}: ${Object.keys(value).join(', ')}`;
+                        })
+                    ].join('\n'));
+                    message.react('🀄');
+                } else {
+                    message.channel.send([
+                        arg,
+                        'Invalid Hand'
+                    ].join('\n'));
+                    message.react('💩');
+                }
+            } else if ('hairi7and13' in result && result.hairi7and13.now === 0) {
+                const now = result.hairi7and13.now;
+                const wait = result.hairi7and13.wait;
+                const hairi7and13 = Object.entries(result.hairi7and13)
+                    .filter(([key, _value]) => !['now', 'wait'].includes(key))
+                    .reduce((result, [key, value]) => result.set(key, value), new Map<string, {[tile: string]: number}>());
+                
+                if (wait !== undefined) {
+                    message.channel.send([
+                        arg,
+                        `Waits: ${Object.keys(wait).join(', ')}`
+                    ].join('\n'));
+                    message.react('🀄');
+                } else if (hairi7and13.size > 0) {
+                    message.channel.send([
+                        arg,
+                        'Invalid Hand. Replace:',
+                        ...[...hairi7and13.entries()].map(([key, value]) => {
                             return `${key}: ${Object.keys(value).join(', ')}`;
                         })
                     ].join('\n'));

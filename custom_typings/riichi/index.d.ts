@@ -25,6 +25,10 @@ declare module 'riichi' {
             };
         };
         hairi7and13: {
+            [tile: string]: {
+                [tile: string]: number;
+            };
+        } & {
             now: number;
             wait?: {
                 [tile: string]: number;
