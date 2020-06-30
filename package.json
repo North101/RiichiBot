@@ -1,5 +1,9 @@
 {
+  "name": "riichi_bot",
+  "version": "0.1.0",
+  "description": "Bot for calculating riichi mahjong scores",
   "main": "src/index.ts",
+  "private": true,
   "scripts": {
     "start": "ts-node ."
   },
