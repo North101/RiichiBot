@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "private": true,
   "scripts": {
-    "start": "ts-node ."
+    "start": "ts-node src/main.ts"
   },
   "devDependencies": {},
   "dependencies": {
