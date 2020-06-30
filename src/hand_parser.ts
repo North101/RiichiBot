@@ -20,12 +20,10 @@ enum Honors {
 }
 
 abstract class Hand {
-    abstract format(): string;
+    abstract format: () => string;
 }
 
-abstract class Tile extends Hand {
-    abstract format(): string;
-}
+abstract class Tile extends Hand {}
 
 abstract class SimpleTile extends Tile {
     value: string;
