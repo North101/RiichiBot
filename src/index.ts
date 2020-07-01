@@ -7,7 +7,6 @@ export default class RiichiBot {
     bot: Discord.Client;
 
     command: string;
-    avatar: string;
 
     separator: string;
     goodEmoji: string;
@@ -16,13 +15,11 @@ export default class RiichiBot {
     constructor(
         token: string,
         command: string = '!riichi',
-        avatar: string = 'https://iconarchive.com/icons/google/noto-emoji-activities/1024/52779-mahjong-red-dragon-icon.png',
         seperator: string = '=',
         goodEmoji: string = '🀄',
         badEmoji: string = '💩',
     ) {
         this.command = command;
-        this.avatar = avatar;
         this.separator = seperator;
         this.goodEmoji = goodEmoji;
         this.badEmoji = badEmoji;
@@ -36,9 +33,6 @@ export default class RiichiBot {
                 name: this.command,
                 type: 'LISTENING',
             });
-            if (this.bot.user!.avatarURL() !== this.avatar) {
-                this.bot.user!.setAvatar(this.avatar);
-            }
         });
         this.bot.on('message', (message) => {
             if (message.author.bot) return;
@@ -63,12 +57,13 @@ export default class RiichiBot {
     handle = (message: Discord.Message, ...args: string[]) => {
         let arg: string = message.content;
         try {
-            if (args[0].includes(this.separator) || args.length > 1) {
+            if (args.length === 0) {
+                throw Error('No arguments');
+            } else if (args[0].includes(this.separator) || args.length > 1) {
                 arg = parseHandArgs(args, this.separator);
             } else {
                 arg = args[0];
             }
-            console.log(arg);
 
             const riichi = new Riichi(arg);
             const result = riichi.calc();
