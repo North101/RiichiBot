@@ -151,7 +151,14 @@ class Dora extends Hand {
 abstract class Flag extends Hand {}
 
 class RiichiFlag extends Flag {
-    format = () => 'r';
+    double: boolean;
+
+    constructor(double: boolean) {
+        super();
+        this.double = double;
+    }
+
+    format = () => this.double ? 'w' : 'r';
 }
 
 class IppatsuFlag extends Flag {
@@ -164,6 +171,10 @@ class RinshanFlag extends Flag {
 
 class HaiteiFlag extends Flag {
     format = () => 'h';
+}
+
+class LocalFlag extends Flag {
+    format = () => 'o';
 }
 
 class RoundFlag extends Flag {
@@ -216,12 +227,13 @@ const handLookup: { [tag: string]: (...values: string[]) => Hand } = {
     'stolen': (tag, ...values) => new Stolen(tileLookup[tag]?.(...values)),
     'ron': (tag, ...values) => new Ron(tileLookup[tag]?.(...values)),
     'dora': (tag, ...values) => new Dora(tileLookup[tag]?.(...values)),
-    'riichi': () => new RiichiFlag(),
+    'riichi': (tag) => new RiichiFlag(tag === 'double'),
     'ippatsu': () => new IppatsuFlag(),
     'chankan': () => new RinshanFlag(),
     'rinshan': () => new RinshanFlag(),
     'haitei': () => new HaiteiFlag(),
     'houtei': () => new HaiteiFlag(),
+    'local': () => new LocalFlag(),
     'wind': (tag) => new WindFlag(windLookup[tag]),
     'round': (tag) => new RoundFlag(windLookup[tag]),
 };
